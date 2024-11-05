@@ -4,11 +4,7 @@ import styles from "../styles/Feature.module.css";
 
 const Feature = () => {
   return (
-<<<<<<< HEAD
-    <section className={styles.featureSection} id='features'>
-=======
     <section className={styles.featureSection} id="#features">
->>>>>>> 5183af6 (new profile components)
       <h2 className={styles.title}>Features</h2>
       <div className={styles.featureContainer}>
         <div className={styles.textContainer}>

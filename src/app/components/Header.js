@@ -2,17 +2,55 @@
 "use client";
 import Image from 'next/image';
 // import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import React from "react";
 import styles from "../styles/Header.module.css";
+import {PeraWalletConnect} from "@perawallet/connect"
+
+const peraWallet = new PeraWalletConnect({
+    // Default chainId is "4160"
+    chainId: "416002"
+});
 
 const Header = () => {
-  
     const [isOpen, setIsOpen] = useState(false);
-  
+    const [activeAddress, setActiveAddress] = useState(null)
+
     const toggleMenu = () => {
       setIsOpen(!isOpen);
     };
+
+    const onConnectWallet = async () => {
+      try {
+        console.log('Attempting to connect')
+        const accounts = await peraWallet.connect();
+        console.log(accounts)
+        peraWallet.connector?.on("disconnect", onDisconnectWallet);
+        setActiveAddress(accounts[0]);
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    const onDisconnectWallet = () => {
+      peraWallet.disconnect();
+      setActiveAddress(null);
+    }
+
+    useEffect(() => {
+      // Reconnect to the session when the component is mounted
+      peraWallet.reconnectSession().then((accounts) => {
+        // Setup the disconnect event listener
+        peraWallet.connector?.on("disconnect", onDisconnectWallet);
+  
+        if (peraWallet.isConnected && accounts.length) {
+          setActiveAddress(accounts[0]);
+        }
+      }).catch((error) => {
+          console.log(error);
+        });
+    }, []);
+
   return (
     <header className={styles.header}>
           <div className={styles.logocontainer}>
@@ -26,7 +64,19 @@ const Header = () => {
         <a href="#beneficiary">Beneficiaries</a>
         <a href="#donors">Donors</a>
       </nav>
-        <button className={styles.contactButton}>Connect Wallet</button>
+        <button  
+          className={styles.contactButton}
+          onClick={() => {
+            if (activeAddress) {
+              onDisconnectWallet()
+            } else {
+              onConnectWallet()
+            }
+          }} 
+          
+        >
+          {activeAddress ? `${activeAddress.slice(0, 10)}...` : 'Connect Wallet'}
+        </button>
         <div className={`${styles.menuIcon} ${isOpen ? styles.open : ''}`} onClick={toggleMenu}>
         <div></div>
         <div></div>
@@ -38,7 +88,18 @@ const Header = () => {
         <li><a href="#features">Features</a></li>
         <li><a href="#beneficiary">Beneficiaries</a></li>
         <li><a href="#donors">Donors</a></li>
-        <button className={styles.WalletButton}>Connect Wallet</button>
+        <button
+          onClick={() => {
+            if (activeAddress) {
+              onDisconnectWallet()
+            } else {
+              onConnectWallet()
+            }
+          }} 
+          className={styles.WalletButton}
+        >
+          {activeAddress ? `${activeAddress.slice(0, 10)}...` : 'Connect Wallet'}
+        </button>
       </ul>
     </header>
   );
